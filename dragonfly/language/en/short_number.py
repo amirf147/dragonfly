@@ -137,9 +137,50 @@ int_1000s       = MagnitudeIntBuilder(
                    multipliers = [int_10_19, int_20_99, int_100s],
                    remainders  = [int_and_1_99, int_100s]
                   )
+
+from dragonfly.language.base.integer_internal import IntBuilderBase
+
+class DigitSeriesBuilder(IntBuilderBase):
+    def __init__(self, max_len=8):
+        self._max_len = max_len
+        IntBuilderBase.__init__(self)
+
+    def _build_element(self, min, max, memo):
+        from dragonfly.grammar.elements import Repetition, Alternative, Compound
+        from dragonfly.language.en.number import int_0, int_1_9
+        
+        item_0 = int_0.build_element(0, 10, memo)
+        item_1_9 = int_1_9.build_element(1, 10, memo)
+        item = Alternative([item_0, item_1_9])
+        
+        rep = Repetition(item, 1, self._max_len, name="digits")
+        
+        class StringInt(int):
+            def __new__(cls, string_val):
+                obj = super(StringInt, cls).__new__(cls, int(string_val))
+                obj._str_val = string_val
+                return obj
+            def __str__(self):
+                return self._str_val
+
+        class DigitSeriesElement(Compound):
+            def __init__(self):
+                Compound.__init__(self, spec="<digits>", extras=[rep])
+            def value(self, node):
+                rep_node = node.get_child_by_name("digits", shallow=True)
+                if not rep_node: return 0
+                
+                # Join digits into a string to preserve leading zeros
+                str_val = "".join(str(d) for d in rep_node.value())
+                return StringInt(str_val)
+
+        return DigitSeriesElement()
+
+int_series = DigitSeriesBuilder(8)
+
 #---------------------------------------------------------------------------
 
 class ShortIntegerContent(IntegerContentBase):
     builders = [int_0, int_1_9, int_10_19, int_20_99, int_10_99,
                 int_x01_x99, int_x10_x99, int_x000_x099, int_x100_x999,
-                int_1000s, int_1000000s]
+                int_1000s, int_1000000s, int_series]

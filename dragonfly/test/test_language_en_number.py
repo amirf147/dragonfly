@@ -242,4 +242,21 @@ class ShortIntegerTestCase(ElementTestCase):
                     ("four hundred thousand three hundred and forty two", 400342),
                     ("two hundred and thirty four thousand five hundred sixty seven", 234567),
                     ("five million two hundred and thirty four thousand five hundred sixty seven", 5234567),
+                    ("zero one one",                  11),
+                    ("zero zero five",                5),
+                    ("one one",                       11),
+                    ("one two three four",            1234),
+                    ("one two three four five six",   123456),
+                   ]
+
+
+class NumberTestCase(ElementTestCase):
+    """ Verify the Number element class """
+    def _build_element(self):
+        from dragonfly.language.base.number import Number
+        return Number(None, zero=True)
+    input_output = [
+                    ("zero",                  0),
+                    ("zero ninety",           90),
+                    ("one thousand",          1000),
                    ]
